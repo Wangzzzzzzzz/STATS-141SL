@@ -1,0 +1,100 @@
+---
+title: "Project"
+author: "Jiancong Qi, Zheng Wang, Janice Li, Joy Wang, Wenxin Zhou"
+date: "2/19/2020"
+output: html_document
+---
+
+```{r, message=FALSE}
+library(readxl)
+library(dplyr)
+library(caret)
+library(e1071)
+library(corrplot)
+library(ggplot2)
+library(readr)
+library(nlme)
+```
+
+### Data Cleaning
+```{r, message=FALSE}
+persian.UCLA = read_xlsx("PersianVCaucasianEyes.xlsx", sheet = 1)[,2:12]
+persian.UCLA = na.omit(persian.UCLA)
+persian.UCLA$Ethnicity = "Persian"
+
+caucasian = read_xlsx("PersianVCaucasianEyes.xlsx", sheet = 2)[,2:12]
+caucasian = na.omit(caucasian)
+
+alldata = rbind(persian.UCLA, caucasian)
+
+persian = read_xlsx("PersianVCaucasianEyes.xlsx", sheet = 3)[,2:9]
+persian$Age = as.numeric(alldata %>% filter(Ethnicity == "Persian" & Sex == "M") %>% summarise(Age = median(Age)))
+persian$Ethnicity = "Persian"
+
+newAll = rbind(alldata[,c(11,2,5:10,1)], persian)
+newTwo = alldata[,c(11,2,5:10,1)]
+newTwo$Ethnicity = as.factor(newTwo$Ethnicity)
+newAll$Ethnicity = as.factor(newAll$Ethnicity)
+persian$Ethnicity = as.factor(persian$Ethnicity)
+male = newTwo %>% filter(Sex == "M")
+female = newTwo %>% filter(Sex == "F")
+```
+
+###CV Split
+```{r, message=FALSE}
+smp_siz = floor(0.8*nrow(newTwo))
+train_ind = sample(seq_len(nrow(newTwo)),size = smp_siz)
+train = newTwo[train_ind,]
+test = newTwo[-train_ind,]
+
+smp_siz = floor(0.8*nrow(male))
+train_ind = sample(seq_len(nrow(male)),size = smp_siz)
+trainMale = male[train_ind,]
+testMale = male[-train_ind,]
+
+smp_siz = floor(0.8*nrow(female))
+train_ind = sample(seq_len(nrow(female)),size = smp_siz)
+trainFemale = female[train_ind,]
+testFemale = female[-train_ind,]
+```
+
+###Data Modeling to Predict Ethnicity
+```{r, message=FALSE}
+# All
+m1 = glm(Ethnicity ~ `MRD-1 (L)` + `TPS (L)` + `PTB (L)` + Age + Sex, data = train, family = "binomial")
+
+m2 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)` + Age + Sex, data = train, family = "binomial")
+
+m3 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)` * Age * Sex, data = train, family = "binomial")
+
+# Male/Female
+m4 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)`*Age, data = trainFemale , family = "binomial")
+
+m5 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)`*Age, data = trainMale , family = "binomial")
+```
+
+
+```{r, message=FALSE}
+summary(m1)
+
+summary(m2)
+
+summary(m3)
+
+summary(m4)
+
+summary(m5)
+```
+
+
+```{r, message=FALSE}
+confusionMatrix(table(predict(m1,test[,1:8],type = 'response') >=0.5,test$Ethnicity=="Persian"))[3]
+
+confusionMatrix(table(predict(m2,test[,1:8],type = 'response') >=0.5,test$Ethnicity=="Persian"))[3]
+
+confusionMatrix(table(predict(m3,test[,1:8],type = 'response') >=0.5,test$Ethnicity=="Persian"))[3]
+
+confusionMatrix(table(predict(m4,testFemale[,1:8],type = 'response') >=0.5,testFemale$Ethnicity=="Persian"))[3]
+
+confusionMatrix(table(predict(m5,testMale[,1:8],type = 'response') >=0.5,testMale$Ethnicity=="Persian"))[3]
+```
