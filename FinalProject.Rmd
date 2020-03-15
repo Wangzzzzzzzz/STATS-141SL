@@ -33,7 +33,7 @@ persian$Ethnicity = "Persian"
 
 newAll = rbind(alldata[,c(11,2,5:10,1)], persian)
 newTwo = alldata[,c(11,2,5:10,1)]
-write.csv(test,file="complete.csv")
+write.csv(newTwo,file="complete.csv")
 newTwo$Ethnicity = as.factor(newTwo$Ethnicity)
 newAll$Ethnicity = as.factor(newAll$Ethnicity)
 persian$Ethnicity = as.factor(persian$Ethnicity)
@@ -44,6 +44,7 @@ female = newTwo %>% filter(Sex == "F")
 ###CV Split
 ```{r, message=FALSE}
 smp_siz = floor(0.8*nrow(newTwo))
+set.seed(684323)
 train_ind = sample(seq_len(nrow(newTwo)),size = smp_siz)
 train = newTwo[train_ind,]
 test = newTwo[-train_ind,]
