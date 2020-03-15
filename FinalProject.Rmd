@@ -1,5 +1,5 @@
 ---
-title: "Project"
+title: "STATS141SL Final Project (Persian Eye)"
 author: "Jiancong Qi, Zheng Wang, Janice Li, Joy Wang, Wenxin Zhou"
 date: "2/19/2020"
 output: html_document
@@ -33,6 +33,7 @@ persian$Ethnicity = "Persian"
 
 newAll = rbind(alldata[,c(11,2,5:10,1)], persian)
 newTwo = alldata[,c(11,2,5:10,1)]
+write.csv(test,file="complete.csv")
 newTwo$Ethnicity = as.factor(newTwo$Ethnicity)
 newAll$Ethnicity = as.factor(newAll$Ethnicity)
 persian$Ethnicity = as.factor(persian$Ethnicity)
@@ -46,6 +47,9 @@ smp_siz = floor(0.8*nrow(newTwo))
 train_ind = sample(seq_len(nrow(newTwo)),size = smp_siz)
 train = newTwo[train_ind,]
 test = newTwo[-train_ind,]
+
+write.csv(train,file="ann_train.csv")
+write.csv(test,file="ann_test.csv")
 
 smp_siz = floor(0.8*nrow(male))
 train_ind = sample(seq_len(nrow(male)),size = smp_siz)
@@ -61,16 +65,16 @@ testFemale = female[-train_ind,]
 ###Data Modeling to Predict Ethnicity
 ```{r, message=FALSE}
 # All
-m1 = glm(Ethnicity ~ `MRD-1 (L)` + `TPS (L)` + `PTB (L)` + Age + Sex, data = train, family = "binomial")
+m1 = glm(Ethnicity ~ `MRD-1 (L)` + `PTB (L)` + Age + Sex, data = train, family = "binomial")
 
 m2 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)` + Age + Sex, data = train, family = "binomial")
 
 m3 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)` * Age * Sex, data = train, family = "binomial")
 
 # Male/Female
-m4 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)`*Age, data = trainFemale , family = "binomial")
+m4 = glm(Ethnicity ~ `MRD-1 (L)` + `PTB (L)` + Age, data = trainFemale , family = "binomial")
 
-m5 = glm(Ethnicity ~ `MRD-1 (L)` * `TPS (L)` * `PTB (L)`*Age, data = trainMale , family = "binomial")
+m5 = glm(Ethnicity ~ `MRD-1 (L)` + `PTB (L)` + Age, data = trainMale , family = "binomial")
 ```
 
 
@@ -98,3 +102,36 @@ confusionMatrix(table(predict(m4,testFemale[,1:8],type = 'response') >=0.5,testF
 
 confusionMatrix(table(predict(m5,testMale[,1:8],type = 'response') >=0.5,testMale$Ethnicity=="Persian"))[3]
 ```
+
+```{bash}
+# run the neural network as a reference to see performance
+# of the logistic regression model
+python FinalProj_ann.py
+```
+
+```{bash}
+# run python script to prepare
+# data for the next part
+python reorganize.py
+```
+
+
+```{r,message=FALSE, warning=FALSE, paged.print = FALSE}
+## run random effect model to see how the measures are differed by Ethnicity
+random_effect_data <- read_csv("./random_effect_data.csv")
+
+random_effect_MRD = lme(`MRD` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+random_effect_PTB = lme(`PTB` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+random_effect_TPS = lme(`TPS` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+random_effect_MRD_TPS = lme(`MRD`/`TPS` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+random_effect_MRD_PTB = lme(`MRD`/`PTB` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+random_effect_PTB_TPS = lme(`PTB`/`TPS` ~ Ethnicity + Sex + Age, random_effect_data, random=~1|Person)
+
+summary(random_effect_MRD)
+summary(random_effect_PTB)
+summary(random_effect_TPS)
+summary(random_effect_MRD_TPS)
+summary(random_effect_MRD_PTB)
+summary(random_effect_PTB_TPS)
+```
+
