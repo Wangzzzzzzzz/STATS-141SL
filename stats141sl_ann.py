@@ -18,8 +18,10 @@ from tqdm import tqdm
 
 Eye_dataframe = pd.read_csv("data.csv",index_col=0)
 Eye_dataframe = Eye_dataframe.sample(frac=1).reset_index(drop=True)
+Eye_dataframe["Sex"] = [1 if item == 'M' else 0 for item in Eye_dataframe["Sex"]]
 
 print(Eye_dataframe.head())
+print(Eye_dataframe.shape)
 
 class EyeDataset(Dataset):
     def __init__(self, Eye_df):
@@ -39,24 +41,23 @@ class EyeData_ANN(nn.Module):
     def __init__(self):
         super(EyeData_ANN, self).__init__()
         self.input = nn.Sequential(
-            nn.Linear(6,32),
+            nn.Linear(8,32),
             nn.BatchNorm1d(num_features=32),
             nn.ReLU()
         )
         self.body = nn.Sequential(
-            nn.Linear(32,128),
-            nn.ReLU(),
-            nn.Linear(128,512),
+            nn.Linear(32,64),
             nn.ReLU(),
             nn.Dropout(p=0.3),
-            nn.Linear(512, 256),
+            nn.Linear(64,128),
             nn.ReLU(),
-            nn.Linear(256, 128),
+            nn.Linear(128, 32),
             nn.ReLU(),
-            nn.Dropout(p=0.3)
+            nn.Linear(32, 16),
+            nn.ReLU()
         )
         self.FC = nn.Sequential(
-            nn.Linear(128, 2),
+            nn.Linear(16, 2),
             nn.Softmax(dim=1)
         )
     
@@ -76,37 +77,34 @@ def accuracy_function(prediction, y):
 def train(model, train_loader, optimizer, loss_function, device):
     model.train()
     total_batch = len(train_loader)
-    with tqdm(train_loader,"Run Train",total=len(train_loader)) as progress:
-        for x_batch, y_batch in progress:
-            optimizer.zero_grad()
-            # print(x_batch)
-            x_batch = x_batch.to(device)
-            y_batch = y_batch.to(device)
-            y_pred = model(x_batch).squeeze(1)
-            loss = loss_function(y_pred,y_batch)
-            acc = accuracy_function(y_pred, y_batch)
-            # back propgation
-            loss.backward()
-            optimizer.step()
-        print('Epoch Finished')
+    for x_batch, y_batch in train_loader:
+        optimizer.zero_grad()
+        # print(x_batch)
+        x_batch = x_batch.to(device)
+        y_batch = y_batch.to(device)
+        y_pred = model(x_batch).squeeze(1)
+        loss = loss_function(y_pred,y_batch)
+        acc = accuracy_function(y_pred, y_batch)
+        # back propgation
+        loss.backward()
+        optimizer.step()
 
 def evaluate(model, evaluation_set, loss_function, device):
     total_loss, total_acc = 0,0
     model.eval() # dropout will be deactivated
     with torch.no_grad():
-        with tqdm(evaluation_set, "Run Eval", total=len(evaluation_set)) as progress:
-            for x_batch, y_batch in evaluation_set:
-                x_batch = x_batch.to(device)
-                y_batch = y_batch.to(device)
-                y_pred = model(x_batch).squeeze(1)
-                loss = loss_function(y_pred, y_batch)
-                acc = accuracy_function(y_pred, y_batch)
+        for x_batch, y_batch in evaluation_set:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+            y_pred = model(x_batch).squeeze(1)
+            loss = loss_function(y_pred, y_batch)
+            acc = accuracy_function(y_pred, y_batch)
 
-                total_loss += loss.item()
-                total_acc += acc.item()
+            total_loss += loss.item()
+            total_acc += acc.item()
     return total_loss/len(evaluation_set), total_acc/len(evaluation_set)
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 
 model = EyeData_ANN()
 optimizer = optim.Adam(model.parameters())
@@ -116,13 +114,13 @@ model = model.to(device)
 loss_function = loss_function.to(device)
 
 training_dataset = EyeDataset(Eye_dataframe.iloc[50:,])
-testing_dataset = EyeDataset(Eye_dataframe.iloc[0:49,])
+testing_dataset = EyeDataset(Eye_dataframe.iloc[0:50,])
 
 
-train_load = DataLoader(dataset=training_dataset,batch_size=8,shuffle=True)
-test_load = DataLoader(dataset=testing_dataset,batch_size=8,shuffle=True)
+train_load = DataLoader(dataset=training_dataset,batch_size=12,shuffle=True)
+test_load = DataLoader(dataset=testing_dataset,batch_size=1,shuffle=True)
 
-for epoch in range(15):
+for epoch in range(50):
 
     train(model,train_load,optimizer,loss_function, device)
     train_loss, train_acc = evaluate(model, train_load, loss_function, device)
