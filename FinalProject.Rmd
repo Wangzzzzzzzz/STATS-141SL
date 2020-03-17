@@ -198,13 +198,13 @@ confusionMatrix(table(predict(m5,testMale[,1:8],type = 'response') >=0.5,testMal
 ```{bash}
 # run the neural network as a reference to see performance
 # of the logistic regression model
-python FinalProj_ann.py
+python3 FinalProj_ann.py
 ```
 
 ```{bash}
 # run python script to prepare
 # data for the next part
-python reorganize.py
+python3 reorganize.py
 ```
 
 
