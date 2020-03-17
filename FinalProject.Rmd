@@ -129,7 +129,7 @@ corrplot(cor(dat_female))
 1. According to the distribution plots, the derived variables, MRD/TPS and MRD/PTB are significantly differentiated by gender.
 2. According to the correlation plot, males' ages correlate with their MRD/TPS and MRD/PTB, with coefficients of 0.34 and 0.5 respectively. Such correlations are weaker on females, but they still exist.
 
-They above two observations suggest that we can potentially predict the two derived variables, MRD/TPS and MRD/PTB, with gender and age.
+The above two observations suggest that we can potentially predict the two derived variables, MRD/TPS and MRD/PTB, with gender and age.
 
 
 ###CV Split
