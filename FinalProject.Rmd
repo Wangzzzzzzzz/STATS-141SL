@@ -18,7 +18,7 @@ library(nlme)
 
 ### Data Cleaning
 ```{r, message=FALSE}
-persian.UCLA = read_xlsx("PersianVCaucasianEyes.xlsx", sheet = 1)[,2:12]
+persian.UCLA = read_xlsx("/Users/jinyi/Downloads/PersianVCaucasianEyes.xlsx", sheet = 1)[,2:12]
 persian.UCLA = na.omit(persian.UCLA)
 persian.UCLA$Ethnicity = "Persian"
 
@@ -54,14 +54,22 @@ corrplot(cor(newTwo[which(newTwo$Ethnicity=="Caucasian"),c(1,3:8)]))
 
 # Persian
 corrplot(cor(newTwo[which(newTwo$Ethnicity=="Persian"),c(1,3:8)]))
+
+# Male
+corrplot(cor(male[,c(1,3:8)]))
+
+# Female
+corrplot(cor(female[,c(1,3:8)]))
 ```
 
 #####Observation:
-1. MRD, PTB and TPS all show fairly high correlation between left and right eyes(0.8).
-2. TPS and PTB correlate with each other(0.6). Such correlation is slightly higher among Caucasian.
-2. Although not very strong, age negatively correlates with MRD(0.4). We should consider adding age to the model as a covariate.
+1. MRD, PTB and TPS all show fairly high correlation between left and right eyes(~0.8).
+2. TPS and PTB correlate with each other(~0.6). Such correlation is slightly higher among Caucasians and females.
+2. Although not very strong, age negatively correlates with MRD(~0.4). We should consider adding age to the model as a covariate.
+
 
 ```{r}
+#Investigate linear relation between age and MRD
 ggplot(newTwo, aes(x=`MRD-1 (L)`, y=Age,fill=Ethnicity)) + geom_point(aes(color=Ethnicity)) + theme_classic()
 ```
 
@@ -83,7 +91,6 @@ ggplot(newAll, aes(x=`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme
 
 ####Distribution of Each Eye Feature, Partitioned by Gender
 ```{r}
-theme_update(plot.title = element_text(hjust = 0.5))
 ggplot(male, aes(x=`PTB (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (L) of Male") + theme(plot.title = element_text(hjust = 0.5))
 ggplot(female, aes(x=`PTB (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (L) of Female") + theme(plot.title = element_text(hjust = 0.5))
 ggplot(male, aes(x=`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (R) of Male") + theme(plot.title = element_text(hjust = 0.5))
@@ -98,6 +105,31 @@ ggplot(female, aes(x=`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme
 1. After splitting the data by gender, both PTB and TPS show obvious differences between the ethnic groups. Therefore, we should create separate models for both genders instead of neglecting the covariate.
 2. The distribution of PTB(L) for Male looks abnormal. Since PTB(R), which is highly correlated to PTB(L), shows a normal Gaussian distribution, we assume that the exotic shape arised due to the small sample size(only 21 Caucasions and 13 Persians in this sample).
 
+
+####Distribution of Variables Derived from Eye Features, Partitioned by Gender (Taking right eyes as examples)
+
+```{r}
+ggplot(male, aes(x=`MRD-1(R)`/`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("MRD-1(R)/TPS (R) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`MRD-1(R)`/`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("MRD-1(R)/TPS(R) of Female") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`MRD-1(R)`/`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("MRD-1(R)/PTB(R) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`MRD-1(R)`/`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("MRD-1(R)/PTB(R) of Female") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`PTB (R)`/`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB(R)/TPS(R) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`PTB (R)`/`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB(R)/TPS(R) of Female") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+dat_male=data.frame(age=male$Age,'MRD-1(R)/TPS(R) of Male'=male$`MRD-1(R)`/male$`TPS (R)`,'MRD-1(R)/PTB(R) of Male'=male$`MRD-1(R)`/male$`PTB (R)`,'PTB(R)/TPS(R)'=male$`PTB (R)`/male$`TPS (R)`)
+corrplot(cor(dat_male))
+dat_female=data.frame(age=female$Age,'MRD-1(R)/TPS(R) of Male'=female$`MRD-1(R)`/female$`TPS (R)`,'MRD-1(R)/PTB(R) of Male'=female$`MRD-1(R)`/female$`PTB (R)`,'PTB(R)/TPS(R)'=female$`PTB (R)`/female$`TPS (R)`)
+corrplot(cor(dat_female))
+```
+
+
+#####Observation:
+1. According to the distribution plots, the derived variables, MRD/TPS and MRD/PTB are significantly differentiated by gender.
+2. According to the correlation plot, males' ages correlate with their MRD/TPS and MRD/PTB, with coefficients of 0.34 and 0.5 respectively. Such correlations are weaker on females, but they still exist.
+
+They above two observations suggest that we can potentially predict the two derived variables, MRD/TPS and MRD/PTB, with gender and age.
 
 
 ###CV Split
