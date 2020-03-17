@@ -2,7 +2,6 @@ import torch
 from torch import nn, optim
 from torch.utils.data import Dataset, DataLoader
 # other utils
-import sys
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
