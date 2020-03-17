@@ -41,6 +41,65 @@ male = newTwo %>% filter(Sex == "M")
 female = newTwo %>% filter(Sex == "F")
 ```
 
+###Exploratory Data Analysis
+
+
+####Correlation of eye features
+```{r, message=FALSE}
+# All Data
+corrplot(cor(newTwo[,c(1,3:8)]))
+
+# Caucasian
+corrplot(cor(newTwo[which(newTwo$Ethnicity=="Caucasian"),c(1,3:8)]))
+
+# Persian
+corrplot(cor(newTwo[which(newTwo$Ethnicity=="Persian"),c(1,3:8)]))
+```
+
+#####Observation:
+1. MRD, PTB and TPS all show fairly high correlation between left and right eyes(0.8).
+2. TPS and PTB correlate with each other(0.6). Such correlation is slightly higher among Caucasian.
+2. Although not very strong, age negatively correlates with MRD(0.4). We should consider adding age to the model as a covariate.
+
+```{r}
+ggplot(newTwo, aes(x=`MRD-1 (L)`, y=Age,fill=Ethnicity)) + geom_point(aes(color=Ethnicity)) + theme_classic()
+```
+
+
+####Distribution of Each Eye Feature
+```{r}
+ggplot(newAll, aes(x=`MRD-1 (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+ggplot(newAll, aes(x=`MRD-1(R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+ggplot(newAll, aes(x=`PTB (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+ggplot(newAll, aes(x=`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+ggplot(newAll, aes(x=`TPS (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+ggplot(newAll, aes(x=`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()
+```
+
+#####Observation:
+1. MRD shows Gaussian distribution, while TPS seems lognormal. PTB is ambiguous and may be either.
+2. Caucasian and Persian have obviously different MRD on both left and right eyes, while TPS and PTB do not show significant difference among ethnic groups. Therefore we draw separate distribution plots for both genders below to investigate whether the difference was masked by the gender covariate.
+
+
+####Distribution of Each Eye Feature, Partitioned by Gender
+```{r}
+theme_update(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`PTB (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (L) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`PTB (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (L) of Female") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (R) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`PTB (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("PTB (R) of Female") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`TPS (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("TPS (L) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`TPS (L)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("TPS (L) of Female") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(male, aes(x=`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("TPS (R) of Male") + theme(plot.title = element_text(hjust = 0.5))
+ggplot(female, aes(x=`TPS (R)`, fill=Ethnicity)) + geom_density(alpha=.3)+ theme_classic()+ggtitle("TPS (R) of Female") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+#####Observation:
+1. After splitting the data by gender, both PTB and TPS show obvious differences between the ethnic groups. Therefore, we should create separate models for both genders instead of neglecting the covariate.
+2. The distribution of PTB(L) for Male looks abnormal. Since PTB(R), which is highly correlated to PTB(L), shows a normal Gaussian distribution, we assume that the exotic shape arised due to the small sample size(only 21 Caucasions and 13 Persians in this sample).
+
+
+
 ###CV Split
 ```{r, message=FALSE}
 smp_siz = floor(0.8*nrow(newTwo))
