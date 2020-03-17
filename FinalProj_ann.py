@@ -110,12 +110,12 @@ testing_dataset = EyeDataset(Eye_test)
 train_load = DataLoader(dataset=training_dataset,batch_size=12,shuffle=True)
 test_load = DataLoader(dataset=testing_dataset,batch_size=1,shuffle=True)
 
-for epoch in range(20):
+for epoch in range(25):
 
     train(model,train_load,optimizer,loss_function, device)
     train_loss, train_acc = evaluate(model, train_load, loss_function, device)
     test_loss, test_acc = evaluate(model, test_load, loss_function, device)
 
-    print(f'Epoch: {epoch+1:02}')
-    print(f'\tTrain Loss: {train_loss:.3f} | Train Acc: {train_acc*100:.2f}%')
-    print(f'\t Val. Loss: {test_loss:.3f} |  Val. Acc: {test_acc*100:.2f}%\n')
+    print('Epoch: {}'.format(epoch+1))
+    print('Train Loss: {0:.3f} | Train Acc: {1:.2f}'.format(train_loss, train_acc))
+    print('Val. Loss: {0:.3f} |  Val. Acc: {1:.2f}'.format(test_loss, test_acc))

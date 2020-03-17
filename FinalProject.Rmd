@@ -18,7 +18,7 @@ library(nlme)
 
 ### Data Cleaning
 ```{r, message=FALSE}
-persian.UCLA = read_xlsx("/Users/jinyi/Downloads/PersianVCaucasianEyes.xlsx", sheet = 1)[,2:12]
+persian.UCLA = read_xlsx("PersianVCaucasianEyes.xlsx", sheet = 1)[,2:12]
 persian.UCLA = na.omit(persian.UCLA)
 persian.UCLA$Ethnicity = "Persian"
 
