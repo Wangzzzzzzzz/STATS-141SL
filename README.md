@@ -1,5 +1,6 @@
 # STATS-141SL
 final project repo
+repo link: https://github.com/Wangzzzzzzzz/STATS-141SL
 
 ## IMPORTANT
 
