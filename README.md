@@ -1,4 +1,6 @@
 # STATS-141SL
+(Final Version, Now Archived)
+
 Final project repo for STATS 141SL. You can view this readme in a nice format in the following repo link.
 
 repo link: https://github.com/Wangzzzzzzzz/STATS-141SL
